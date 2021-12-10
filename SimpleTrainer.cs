@@ -47,7 +47,7 @@ namespace Trainer
                     return (float) Math.Sqrt((delta.x * delta.x) + (delta.y * delta.y) + (delta.z * delta.z));
                 }
 
-                public static Vector3 operator +(Vector3 vectorA, Vector3 vectorB)
+                public static Vector3 operator + (Vector3 vectorA, Vector3 vectorB)
                 {
                     return new Vector3(
                         vectorA.x + vectorB.x,
@@ -56,7 +56,7 @@ namespace Trainer
                     );
                 }
 
-                public static Vector3 operator -(Vector3 vectorA, Vector3 vectorB)
+                public static Vector3 operator - (Vector3 vectorA, Vector3 vectorB)
                 {
                     return new Vector3(
                         vectorA.x - vectorB.x,
@@ -65,7 +65,7 @@ namespace Trainer
                     );
                 }
 
-                public static Vector3 operator *(Vector3 vector, float scale)
+                public static Vector3 operator * (Vector3 vector, float scale)
                 {
                     return new Vector3(
                         vector.x * scale,
@@ -94,6 +94,14 @@ namespace Trainer
                     
                     if (pitch >  89.0f) pitch -= 180.0f;
                     if (pitch < -89.0f) pitch += 180.0f;
+                }
+
+                public static ANGLE operator * (ANGLE angle, float scale)
+                {
+                    return new ANGLE(
+                        angle.pitch * scale,
+                        angle.yaw   * scale
+                    );
                 }
 
                 public override string ToString() => $"({pitch}, {yaw})";
@@ -130,14 +138,14 @@ namespace Trainer
             
             static UIntPtr getPlayerBoneMatrix(UIntPtr player) => mm.ReadUIntPtr(player + Offsets.m_dwBoneMatrix);
 
-            static ANGLE getAimPunchAngles()
+            static ANGLE getAimPunchAnglesScaled()
             {
                 UIntPtr localPlayer = getLocalPlayer();
 
                 return new ANGLE(
                       mm.ReadFloat(localPlayer + Offsets.m_aimPunchAngle + 0x0),
                       mm.ReadFloat(localPlayer + Offsets.m_aimPunchAngle + 0x4)
-                );
+                ) * 2.1;
             }
 
             static Vector3 getPlayerLocation(UIntPtr player) => new Vector3(
@@ -197,7 +205,7 @@ namespace Trainer
                 Vector3 delta = target - localPlayerHead;
                 float deltaLength = localPlayerHead.distanceTo(target);
 
-                ANGLE aimPunchAngles = getAimPunchAngles();
+                ANGLE aimPunchAngles = getAimPunchAnglesScaled();
                 
                 writeLocalPlayerViewAngles(new ANGLE(
                     (float) (-Math.Asin (delta.z / deltaLength) * (180.0f / Math.PI) - aimPunchAngles.pitch), 
