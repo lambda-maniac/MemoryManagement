@@ -10,8 +10,8 @@ namespace MemoryManagement
         public const int GWL_EXSTYLE       = (-0000020);
 
         public const int VK_LCONTROL = (0xA2);
-        public const int VK_RBUTTON  = (0x01);
-        public const int VK_LBUTTON  = (0x02);
+        public const int VK_RBUTTON  = (0x02);
+        public const int VK_LBUTTON  = (0x01);
         public const int VK_DELETE   = (0x2E);
         public const int VK_LSHIFT   = (0xA0);
 
