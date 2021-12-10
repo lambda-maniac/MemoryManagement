@@ -2,7 +2,6 @@ using System;
 using System.Text;
 using System.Linq;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace MemoryManagement
 {
@@ -14,7 +13,7 @@ namespace MemoryManagement
         public MemoryManager(string processName)
         {
             process       = Process.GetProcessesByName(processName).FirstOrDefault();
-            processHandle = Kernel32.OpenProcess(Kernel32.PROCESS_VM_READ | Kernel32.PROCESS_VM_WRITE, false, process.Id);
+            processHandle = Kernel32.OpenProcess(Kernel32.PROCESS_VM_READ | Kernel32.PROCESS_VM_WRITE | Kernel32.PROCESS_VM_OPERATION, false, process.Id);
         }
 
         public IntPtr ReadIntPtr(IntPtr lpBaseAddress)
@@ -23,7 +22,7 @@ namespace MemoryManagement
 
             Kernel32.ReadProcessMemory(processHandle, lpBaseAddress, buffer, 4, out _);
 
-            return (IntPtr)BitConverter.ToInt32(buffer, 0);
+            return (IntPtr) BitConverter.ToInt32(buffer, 0);
         }
 
         public int ReadInt(IntPtr lpBaseAddress)
@@ -35,19 +34,24 @@ namespace MemoryManagement
             return BitConverter.ToInt32(buffer, 0);
         }
 
-        // TODO: Implement reading/writing of other types
-        /* Well, I tried...
-        public Type Read<Type>(IntPtr lpBaseAddress) where Type : unmanaged
+        public bool WriteInt(IntPtr lpBaseAddress, int value)
         {
-            int size = Marshal.SizeOf<Type>();
-
-            object buffer = default(Type);
-
-            Kernel32.ReadProcessMemory(processHandle, lpBaseAddress, buffer, size, out int lpNumberOfBytesRead);
-
-            return lpNumberOfBytesRead == size ? (Type) buffer : default;
+            return Kernel32.WriteProcessMemory(processHandle, lpBaseAddress, BitConverter.GetBytes(value), 4, out _);
         }
-        */
+
+        public float ReadFloat(IntPtr lpBaseAddress)
+        {
+            byte[] buffer = new byte[4];
+
+            Kernel32.ReadProcessMemory(processHandle, lpBaseAddress, buffer, 4, out _);
+
+            return BitConverter.ToSingle(buffer, 0);
+        }
+
+        public bool WriteFloat(IntPtr lpBaseAddress, float value)
+        {
+            return Kernel32.WriteProcessMemory(processHandle, lpBaseAddress, BitConverter.GetBytes(value), 4, out _);
+        }
 
         public Module GetModuleByName(string moduleName)
         {
