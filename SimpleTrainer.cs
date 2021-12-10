@@ -95,6 +95,8 @@ namespace Trainer
                     if (pitch >  89.0f) pitch -= 180.0f;
                     if (pitch < -89.0f) pitch += 180.0f;
                 }
+
+                public override string ToString() => $"({pitch}, {yaw})";
             }
 
             static MemoryManager mm = new MemoryManager("csgo");
@@ -103,16 +105,41 @@ namespace Trainer
             static UIntPtr engine = mm.GetModuleByName("engine.dll").BaseAddress;
 
             static UIntPtr getPlayer(int index) => mm.ReadUIntPtr(client + Offsets.dwEntityList + (index * 0x10));
-            static UIntPtr getLocalPlayer() => mm.ReadUIntPtr(client + Offsets.dwLocalPlayer);
-            static UIntPtr getClientState() => mm.ReadUIntPtr(engine + Offsets.dwClientState);
-            static int getPlayerHealth(UIntPtr player) => mm.ReadInt(player + Offsets.m_iHealth);
-            static int getPlayerTeam(UIntPtr player) => mm.ReadInt(player + Offsets.m_iTeamNum);
-            static int getLocalPlayerFlags() => mm.ReadInt(getLocalPlayer() + Offsets.m_fFlags);
-            static bool isDormant(UIntPtr player) => mm.ReadInt(player + Offsets.m_bDormant) == 1;
-            static bool isDead(UIntPtr player) => getPlayerHealth(player) <= 0 || getPlayerHealth(player) > 100;
-            static bool isSameTeam(UIntPtr playerA, UIntPtr playerB) => getPlayerTeam(playerA) == getPlayerTeam(playerB);
-            static UIntPtr getPlayerBoneMatrix(UIntPtr player) => mm.ReadUIntPtr(player + Offsets.m_dwBoneMatrix);
             
+            static UIntPtr getLocalPlayer() => mm.ReadUIntPtr(client + Offsets.dwLocalPlayer);
+            
+            static UIntPtr getClientState() => mm.ReadUIntPtr(engine + Offsets.dwClientState);
+            
+            static int getPlayerHealth(UIntPtr player) => mm.ReadInt(player + Offsets.m_iHealth);
+            
+            static int getPlayerTeam(UIntPtr player) => mm.ReadInt(player + Offsets.m_iTeamNum);
+            
+            static int getLocalPlayerFlags() => mm.ReadInt(getLocalPlayer() + Offsets.m_fFlags);
+
+            static int getLocalPlayerId() => mm.ReadInt(getClientState() + Offsets.dwClientState_GetLocalPlayer);
+            
+            static bool isDormant(UIntPtr player) => mm.ReadInt(player + Offsets.m_bDormant) == 1;
+            
+            static bool isDead(UIntPtr player) => getPlayerHealth(player) <= 0 || getPlayerHealth(player) > 100;
+            
+            static bool isTeamEql(UIntPtr playerA, UIntPtr playerB) => getPlayerTeam(playerA) == getPlayerTeam(playerB);
+
+            static int whoSpottedByMask(UIntPtr player) => mm.ReadInt(player + Offsets.m_bSpottedByMask);
+
+            static bool isVisible(UIntPtr player) => Convert.ToBoolean(whoSpottedByMask(player) & (1 << getLocalPlayerId()));
+            
+            static UIntPtr getPlayerBoneMatrix(UIntPtr player) => mm.ReadUIntPtr(player + Offsets.m_dwBoneMatrix);
+
+            static ANGLE getAimPunchAngles()
+            {
+                UIntPtr localPlayer = getLocalPlayer();
+
+                return new ANGLE(
+                      mm.ReadFloat(localPlayer + Offsets.m_aimPunchAngle + 0x0),
+                      mm.ReadFloat(localPlayer + Offsets.m_aimPunchAngle + 0x4)
+                );
+            }
+
             static Vector3 getPlayerLocation(UIntPtr player) => new Vector3(
                 mm.ReadFloat(player + Offsets.m_vecOrigin + 0x0),
                 mm.ReadFloat(player + Offsets.m_vecOrigin + 0x4),
@@ -141,14 +168,13 @@ namespace Trainer
                 );
             }
 
-            static Vector3 getLocalPlayerViewAngles()
+            static ANGLE getLocalPlayerViewAngles()
             {
                 UIntPtr clientState = getClientState();
 
-                return new Vector3(
+                return new ANGLE(
                     mm.ReadFloat(clientState + Offsets.dwClientState_ViewAngles + 0x0),
-                    mm.ReadFloat(clientState + Offsets.dwClientState_ViewAngles + 0x4),
-                    mm.ReadFloat(clientState + Offsets.dwClientState_ViewAngles + 0x8)
+                    mm.ReadFloat(clientState + Offsets.dwClientState_ViewAngles + 0x4)
                 );
             }
 
@@ -170,19 +196,66 @@ namespace Trainer
 
                 Vector3 delta = target - localPlayerHead;
                 float deltaLength = localPlayerHead.distanceTo(target);
+
+                ANGLE aimPunchAngles = getAimPunchAngles();
                 
                 writeLocalPlayerViewAngles(new ANGLE(
-                    (float) (-Math.Asin (delta.z / deltaLength) * (180.0f / Math.PI)), 
-                    (float) ( Math.Atan2(delta.y , delta.x    ) * (180.0f / Math.PI))
+                    (float) (-Math.Asin (delta.z / deltaLength) * (180.0f / Math.PI) - aimPunchAngles.pitch), 
+                    (float) ( Math.Atan2(delta.y , delta.x    ) * (180.0f / Math.PI) - aimPunchAngles.yaw  )
                 ));
+            }
+
+            static int findClosestValidEnemy()
+            {
+                float closestDistance      = 99999.9f ; // float.MaxValue;
+                short closestDistanceIndex = -1       ;
+
+                UIntPtr localPlayer = getLocalPlayer();
+
+                for (short index = 1; index < 32; ++index)
+                {
+                    UIntPtr entity = getPlayer(index);
+
+                    if 
+                    (   entity == UIntPtr.Zero
+                    ||  isTeamEql(localPlayer, entity)
+                    || !isVisible(entity)
+                    ||  isDormant(entity)
+                    ||  isDead   (entity)
+                    )   continue;
+
+                    float currentDistance = 
+                        getPlayerLocation( localPlayer ).distanceTo( getPlayerLocation(entity) );
+
+                    if (currentDistance < closestDistance)
+                    {
+                        closestDistance      = currentDistance ;
+                        closestDistanceIndex = index           ;
+                    }
+                }
+
+                return closestDistanceIndex;
+            }
+
+            static void AimBot()
+            {
+                int entityIndex = findClosestValidEnemy();
+
+                if (entityIndex != -1)
+                {
+                    forceLocalPlayerAimTo(
+                        getPlayerBoneLocation(
+                            getPlayer(entityIndex), 8
+                        )
+                    );
+                }
             }
 
             public static void run()
             {
                 while (!User32.IsKeyDown(User32.VK_DELETE))
                 {
-                    Console.WriteLine($"LocalPlayer Health: {getPlayerHealth(getLocalPlayer())}");
-                    Thread.Sleep(1000);
+                    if (User32.IsKeyDown(User32.VK_LSHIFT)) AimBot();
                 }
             }
         }
