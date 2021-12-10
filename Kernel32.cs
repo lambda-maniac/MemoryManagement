@@ -25,6 +25,5 @@ namespace MemoryManagement
         
         [DllImport("Kernel32.dll")]
         public static extern bool WriteProcessMemory(IntPtr hProcess, UIntPtr lpBaseAddress, byte[] lpBuffer, int nSize, out int lpNumberOfBytetsWritten);
-
     }
 }
