@@ -25,6 +25,33 @@ namespace MemoryManagement
             return (IntPtr) BitConverter.ToInt32(buffer, 0);
         }
 
+        public IntPtr ReadIntPtr(UIntPtr lpBaseAddress)
+        {
+            byte[] buffer = new byte[4];
+
+            Kernel32.ReadProcessMemory(processHandle, lpBaseAddress, buffer, 4, out _);
+
+            return (IntPtr) BitConverter.ToInt32(buffer, 0);
+        }
+
+        public UIntPtr ReadUIntPtr(IntPtr lpBaseAddress)
+        {
+            byte[] buffer = new byte[4];
+
+            Kernel32.ReadProcessMemory(processHandle, lpBaseAddress, buffer, 4, out _);
+
+            return (UIntPtr) BitConverter.ToUInt32(buffer, 0);
+        }
+
+        public UIntPtr ReadUIntPtr(UIntPtr lpBaseAddress)
+        {
+            byte[] buffer = new byte[4];
+
+            Kernel32.ReadProcessMemory(processHandle, lpBaseAddress, buffer, 4, out _);
+
+            return (UIntPtr) BitConverter.ToUInt32(buffer, 0);
+        }
+
         public int ReadInt(IntPtr lpBaseAddress)
         {
             byte[] buffer = new byte[4];
@@ -34,7 +61,49 @@ namespace MemoryManagement
             return BitConverter.ToInt32(buffer, 0);
         }
 
+        public int ReadInt(UIntPtr lpBaseAddress)
+        {
+            byte[] buffer = new byte[4];
+
+            Kernel32.ReadProcessMemory(processHandle, lpBaseAddress, buffer, 4, out _);
+
+            return BitConverter.ToInt32(buffer, 0);
+        }
+
+        public uint ReadUInt(IntPtr lpBaseAddress)
+        {
+            byte[] buffer = new byte[4];
+
+            Kernel32.ReadProcessMemory(processHandle, lpBaseAddress, buffer, 4, out _);
+
+            return BitConverter.ToUInt32(buffer, 0);
+        }
+
+        public uint ReadUInt(UIntPtr lpBaseAddress)
+        {
+            byte[] buffer = new byte[4];
+
+            Kernel32.ReadProcessMemory(processHandle, lpBaseAddress, buffer, 4, out _);
+
+            return BitConverter.ToUInt32(buffer, 0);
+        }
+
         public bool WriteInt(IntPtr lpBaseAddress, int value)
+        {
+            return Kernel32.WriteProcessMemory(processHandle, lpBaseAddress, BitConverter.GetBytes(value), 4, out _);
+        }
+
+        public bool WriteUInt(IntPtr lpBaseAddress, uint value)
+        {
+            return Kernel32.WriteProcessMemory(processHandle, lpBaseAddress, BitConverter.GetBytes(value), 4, out _);
+        }
+
+        public bool WriteInt(UIntPtr lpBaseAddress, int value)
+        {
+            return Kernel32.WriteProcessMemory(processHandle, lpBaseAddress, BitConverter.GetBytes(value), 4, out _);
+        }
+        
+        public bool WriteUInt(UIntPtr lpBaseAddress, uint value)
         {
             return Kernel32.WriteProcessMemory(processHandle, lpBaseAddress, BitConverter.GetBytes(value), 4, out _);
         }
@@ -48,7 +117,21 @@ namespace MemoryManagement
             return BitConverter.ToSingle(buffer, 0);
         }
 
+        public float ReadFloat(UIntPtr lpBaseAddress)
+        {
+            byte[] buffer = new byte[4];
+
+            Kernel32.ReadProcessMemory(processHandle, lpBaseAddress, buffer, 4, out _);
+
+            return BitConverter.ToSingle(buffer, 0);
+        }
+
         public bool WriteFloat(IntPtr lpBaseAddress, float value)
+        {
+            return Kernel32.WriteProcessMemory(processHandle, lpBaseAddress, BitConverter.GetBytes(value), 4, out _);
+        }
+
+        public bool WriteFloat(UIntPtr lpBaseAddress, float value)
         {
             return Kernel32.WriteProcessMemory(processHandle, lpBaseAddress, BitConverter.GetBytes(value), 4, out _);
         }
