@@ -14,9 +14,9 @@ namespace MemoryManagement
         [StructLayout(LayoutKind.Sequential)] 
         public struct MODULE_INFO
         {
-            public IntPtr lpBaseOfDll ;
-            public uint   SizeOfImage ;
-            public IntPtr EntryPoint  ;
+            public UIntPtr lpBaseOfDll ;
+            public uint    SizeOfImage ;
+            public UIntPtr EntryPoint  ;
         }
 
         [DllImport("psapi.dll")]
