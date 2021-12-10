@@ -6,10 +6,10 @@ namespace MemoryManagement
 {
     public static class Native
     {
-        public const int LIST_MODULES_DEFAULT = 0x0  ;
-        public const int LIST_MODULES_32_BIT  = 0x01 ;
-        public const int LIST_MODULES_64_BIT  = 0x02 ;
-        public const int LIST_MODULES_ALL     = 0x03 ;
+        public const int LIST_MODULES_DEFAULT = (0x0000);
+        public const int LIST_MODULES_32_BIT  = (0x0001);
+        public const int LIST_MODULES_64_BIT  = (0x0002);
+        public const int LIST_MODULES_ALL     = (0x0003);
 
         [StructLayout(LayoutKind.Sequential)] 
         public struct MODULE_INFO
