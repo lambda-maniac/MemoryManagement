@@ -19,9 +19,9 @@ UIntPtr module_address = mm.GetModuleByName(MODULE_NAME).BaseAddress;
 ```cs
 int int_val = mm.ReadInt(ADDRESS);
 uint uint_val = mm.ReadUInt(ADDRESS);
+float float_val = mm.ReadFloat(ADDRESS);
 IntPtr intPtr_val = mm.ReadIntPtr(ADDRESS);
 UIntPtr uIntPtr_val = mm.ReadUIntPtr(ADDRESS);
-float float_val = mm.ReadFloat(ADDRESS);
 ```
 - The same method naming convention is valid for writing, with the exception that now you only have access to two data types (`int` and `float`), and you pass a second argument with the value to be written. Ex:
 ```cs
